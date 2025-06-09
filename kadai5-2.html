@@ -4,9 +4,9 @@
     <title>演習課題5-2：外部APIの呼び出しテスト</title>
 </head>
 <body>
-    <h1 id="msg">何かのAPI</h1>
+    <h1 id="msg">WorldTimeAPIで現在時刻を取得</h1>
     <form name="apiform"><p>
-        何かのフォーム：<input type="text" name="form_data">
+        タイムゾーンを入力（例: Asia/Tokyo）：<input type="text" name="form_data" placeholder="Asia/Tokyo">
         <button type="button" id="btn1" onclick="some_api(this.form)">実行</button>
     </p></form>
     
@@ -14,8 +14,26 @@
     <script>
         async function some_api(myForm) {
             // ここにコードを書く
-            document.getElementById("result").innerHTML += myForm.form_data.value+"<br />";
-            document.apiform.reset();
+            const endpoint = "http://worldtimeapi.org/api/timezone";
+            const timezone = myForm.form_data.value || "Asia/Tokyo"; // デフォルト値
+            try {
+                const response = await fetch(`${endpoint}/${timezone}`);
+                if (!response.ok) {
+                    throw new Error("無効なタイムゾーンまたはAPIエラー");
+                }
+                const data = await response.json();
+                document.getElementById("result").innerHTML = `
+                    <h3>${timezone}の現在時刻</h3>
+                    <p>時刻: ${data.datetime.split('.')[0]}</p>
+                    <p>タイムゾーン: ${data.timezone}</p>
+                    <p>曜日: ${data.day_of_week} (0=日曜, 6=土曜)</p>
+                    <p>UTCオフセット: ${data.utc_offset}</p>
+                `;
+                document.apiform.reset();
+            } catch (error) {
+                console.error('Error:', error);
+                document.getElementById("result").innerHTML = `エラー: ${error.message}<br>例: Asia/Tokyo, Europe/London`;
+            }
         }
     </script>
 </body>
